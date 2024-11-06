@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write  # Grant write permissions for packages
+
 env:
   APP_NAME: "my-app"  # Replace with your app name or pass it as an input
   ENVIRONMENT: "production"  # Set different values for different environments if needed
