@@ -1,21 +1,20 @@
-name: CI/CD
+name: Build, Publish, and Update Manifests
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
-permissions:
-  contents: read
-  packages: write  # Grant write permissions for packages
+env:
+  APP_NAME: "my-app"  # Replace with your app name or pass it as an input
+  ENVIRONMENT: "production"  # Set different values for different environments if needed
+  REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # Update with your registry path
+  IMAGE_TAG: ${{ github.sha }}  # Use the commit SHA as the image tag for versioning
 
 jobs:
-  build-and-push:
+  build-publish-and-setup:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -32,12 +31,44 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/$REPO_OWNER/demo-app:${{ github.sha }} .
-
+          docker build -t ghcr.io/$REPO_OWNER/$APP_NAME:${{ env.IMAGE_TAG }} .
+      
       - name: Push Docker image
         run: |
-          docker push ghcr.io/$REPO_OWNER/demo-app:${{ github.sha }}
+          docker push ghcr.io/$REPO_OWNER/$APP_NAME:${{ env.IMAGE_TAG }}
 
-      - name: Output image tag
+      - name: Set up new app manifests
         run: |
-          echo "Image: ghcr.io/$REPO_OWNER/demo-app:${{ github.sha }}"
+          # Define paths and new app folder
+          TEMPLATE_DIR="kubernetes/_templates/app"
+          NEW_APP_DIR="kubernetes/$APP_NAME"
+          
+          # Copy the template directory to the new app folder
+          mkdir -p $NEW_APP_DIR
+          cp $TEMPLATE_DIR/* $NEW_APP_DIR
+          
+          # Replace placeholders in deployment.yaml
+          sed -i "s|{{APP_NAME}}|$APP_NAME|g" $NEW_APP_DIR/deployment.yaml
+          sed -i "s|{{ENVIRONMENT}}|$ENVIRONMENT|g" $NEW_APP_DIR/deployment.yaml
+          sed -i "s|{{REGISTRY}}|$REGISTRY|g" $NEW_APP_DIR/deployment.yaml
+          sed -i "s|{{IMAGE_TAG}}|${{ env.IMAGE_TAG }}|g" $NEW_APP_DIR/deployment.yaml
+          
+          # Replace placeholders in service.yaml
+          sed -i "s|{{APP_NAME}}|$APP_NAME|g" $NEW_APP_DIR/service.yaml
+          sed -i "s|{{ENVIRONMENT}}|$ENVIRONMENT|g" $NEW_APP_DIR/service.yaml
+          
+          # (Optional) Log the changes for verification
+          echo "Generated manifests for $APP_NAME:"
+          cat $NEW_APP_DIR/deployment.yaml
+          cat $NEW_APP_DIR/service.yaml
+          cat $NEW_APP_DIR/kustomization.yaml
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add kubernetes/$APP_NAME
+          git commit -m "Add manifests for $APP_NAME based on template"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
