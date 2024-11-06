@@ -32,4 +32,5 @@ jobs:
           docker push ghcr.io/${{ github.repository }}/demo-app:${{ github.sha }}
 
       - name: Output image tag
-        run: echo "Image: ghcr.io/${{ github.repository }}/demo-app:${{ github.sha }}"
+        run: |
+          echo "Image: ghcr.io/${{ github.repository }}/demo-app:${{ github.sha }}"
