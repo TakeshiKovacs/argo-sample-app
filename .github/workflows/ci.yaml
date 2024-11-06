@@ -43,7 +43,7 @@ jobs:
 
       - name: Clone manifests repository
         run: |
-          git clone https://github.com/TakeshiKovacs/git-ops.git manifests-repo
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/TakeshiKovacs/git-ops.git manifests-repo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
