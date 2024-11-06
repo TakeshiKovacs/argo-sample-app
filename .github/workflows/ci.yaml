@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write  # Grant write permissions for packages
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
