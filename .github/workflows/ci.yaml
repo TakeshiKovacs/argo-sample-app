@@ -1,4 +1,4 @@
-name: Build, Publish, and Update Manifests
+name: Build, Publish, and Update Manifest
 
 on:
   push:
