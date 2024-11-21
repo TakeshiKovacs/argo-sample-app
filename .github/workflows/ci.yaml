@@ -25,7 +25,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "REPO_OWNER=$(echo '${{ github.repository_owner }}' | awk '{print tolower($0)}')" >> $GITHUB_ENV
+          REPO_OWNER=$(echo '${{ github.repository_owner }}' | awk '{print tolower($0)}')
+          echo "REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
           echo "REGISTRY=ghcr.io/$REPO_OWNER" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
