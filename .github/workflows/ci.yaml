@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,7 +13,6 @@ permissions:
 env:
   APP_NAME: "my-app"  # Replace with your app name or pass it as an input
   ENVIRONMENT: "production"  # Set different values for different environments if needed
-  REGISTRY: "ghcr.io/${{ github.repository_owner }}"  # Update with your registry path
   IMAGE_TAG: ${{ github.sha }}  # Use the commit SHA as the image tag for versioning
 
 jobs:
@@ -24,7 +24,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set environment variables
-        run: echo "REPO_OWNER=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_ENV
+        run: |
+          echo "REPO_OWNER=$(echo '${{ github.repository_owner }}' | awk '{print tolower($0)}')" >> $GITHUB_ENV
+          echo "REGISTRY=ghcr.io/$REPO_OWNER" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
@@ -35,18 +37,18 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/$REPO_OWNER/$APP_NAME:${{ env.IMAGE_TAG }} .
-      
+          docker build -t $REGISTRY/$APP_NAME:${{ env.IMAGE_TAG }} .
+
       - name: Push Docker image
         run: |
-          docker push ghcr.io/$REPO_OWNER/$APP_NAME:${{ env.IMAGE_TAG }}
+          docker push $REGISTRY/$APP_NAME:${{ env.IMAGE_TAG }}
 
       - name: Clone manifests repository
         run: |
           git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/TakeshiKovacs/git-ops.git manifests-repo
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-  
+
       - name: Set up new app manifests
         run: |
           # Define paths and new app folder
