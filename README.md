@@ -1,3 +1,3 @@
 # argo-sample-app
 
-Sample application to demonstrate argo
+Sample application to demonstrate argo.
